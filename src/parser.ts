@@ -153,6 +153,8 @@ function extractFileRefs(
   const EXAMPLE_INDICATORS = /\(.*`[^`]+`.*\)|e\.g\.|example|such as|like /i;
   // Glob patterns and wildcards are not real file paths
   const GLOB_PATTERN = /[*?{}\[\]]/;
+  // CLI commands that contain file-like paths but aren't file references
+  const CLI_COMMAND_PATTERN = /^\s*[-*]?\s*(?:`[^`]*`\s*$|.*\b(?:kubectl|docker|terraform|helm|aws|gcloud|az|npm|yarn|pnpm|npx|pip|cargo|go)\s+)/i;
 
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].trim().startsWith("```")) {
@@ -163,6 +165,8 @@ function extractFileRefs(
 
     // Skip lines that are clearly showing examples/naming conventions
     if (EXAMPLE_INDICATORS.test(lines[i])) continue;
+    // Skip lines that are CLI commands containing file-like args
+    if (CLI_COMMAND_PATTERN.test(lines[i])) continue;
 
     let match: RegExpExecArray | null;
     const regex = new RegExp(FILE_REF_PATTERN.source, "g");

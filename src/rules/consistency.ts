@@ -40,8 +40,10 @@ const CONFLICT_PAIRS: Array<[RegExp, RegExp, string]> = [
   [/\bkubernetes\b|\bkubectl\b|\bk8s\b/i, /\buse\s+terraform\b|\bterraform\b.*instead/i, "infrastructure"],
   // Database mocking
   [/\bmock\b.*\bdatabase\b|\bmock\b.*\bdb\b/i, /\bnever\s+mock\b.*\bdatabase\b|\bnever\s+mock\b.*\bdb\b|\bdon't\s+mock\b.*\bdatabase\b|\bdo\s+not\s+mock\b.*\bdatabase\b|\breal\b.*\bconnection\b.*\bdatabase\b|\breal\b.*\bdatabase\b/i, "database mocking"],
-  // Dependencies
-  [/\bbanned\b|\bis\s+banned\b|\bdo\s+not\s+use\b|\bdon't\s+use\b|\bnever\s+use\b/i, /\bimport\b.*\bfrom\b|\buse\b.*\bwhen\s+needed\b/i, "banned dependency"],
+  // Dependencies — specific library bans vs imports
+  [/\blodash\b.*\bbanned\b|\bbanned\b.*\blodash\b|\bdo\s+not\s+use\s+lodash\b|\bdon't\s+use\s+lodash\b|\bnever\s+use\s+lodash\b|\bno\s+lodash\b/i, /\blodash\b.*\bimport\b|\bimport\b.*\blodash\b|\buse\b.*\blodash\b|\blodash\b.*\bwhen\s+needed\b/i, "lodash usage"],
+  [/\bmoment\b.*\bbanned\b|\bbanned\b.*\bmoment\b|\bdo\s+not\s+use\s+moment\b|\bdon't\s+use\s+moment\b|\bnever\s+use\s+moment\b|\bno\s+moment\b/i, /\bmoment\b.*\bimport\b|\bimport\b.*\bmoment\b|\buse\b.*\bmoment\b/i, "moment.js usage"],
+  [/\bjquery\b.*\bbanned\b|\bbanned\b.*\bjquery\b|\bdo\s+not\s+use\s+jquery\b|\bdon't\s+use\s+jquery\b|\bnever\s+use\s+jquery\b|\bno\s+jquery\b/i, /\bjquery\b.*\bimport\b|\bimport\b.*\bjquery\b|\buse\b.*\bjquery\b/i, "jQuery usage"],
   // Versioning
   [/\bdo\s+not\s+upgrade\b|\bdon't\s+upgrade\b|\bpinned\b|\block/i, /\blatest\s+version\b|\balways\s+upgrade\b|\bkeep.*up.to.date\b/i, "version strategy"],
   // Git workflow
@@ -105,7 +107,7 @@ export function checkConsistency(file: ParsedFile): DimensionScore {
             message: `Contradictory ${topic} instructions`,
             line: a.line,
             endLine: b.line,
-            suggestion: `Choose one ${topic} strategy. Line ${a.line}: "${a.text.slice(0, 60)}" conflicts with Line ${b.line}: "${b.text.slice(0, 60)}"`,
+            suggestion: `Choose one approach. Line ${a.line}: "${a.text.slice(0, 60)}" conflicts with Line ${b.line}: "${b.text.slice(0, 60)}"`,
           });
         }
       }
