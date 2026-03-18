@@ -1,0 +1,50 @@
+{
+  "name": "claudemd-lint",
+  "version": "0.1.0",
+  "description": "Lint, validate, and score your CLAUDE.md files across 7 dimensions",
+  "author": "Code Coin Cognition LLC <hello@codecoincognition.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codecoincognition/claudemd-lint.git"
+  },
+  "homepage": "https://github.com/codecoincognition/claudemd-lint#readme",
+  "bugs": {
+    "url": "https://github.com/codecoincognition/claudemd-lint/issues"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claudemd",
+    "lint",
+    "linter",
+    "validation",
+    "ai",
+    "developer-tools"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "claudemd-lint": "dist/bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "claudemd-lint",
+    "test": "node --test dist/**/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
