@@ -11,7 +11,7 @@
  *   npx claudemd-lint --discover      Find all CLAUDE.md files in monorepo
  */
 
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
 import { existsSync } from "node:fs";
 import { lint } from "../src/scorer.js";
 import { discoverFiles } from "../src/parser.js";
@@ -110,7 +110,7 @@ function main(): void {
 
     const config: LintConfig = {
       ...DEFAULT_CONFIG,
-      rootDir: cwd,
+      rootDir: dirname(filePath),
       format: args.format,
     };
 
