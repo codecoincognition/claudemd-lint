@@ -7,15 +7,21 @@ Every Claude Code user writes a CLAUDE.md. Nobody validates theirs. This tool ch
 ## Quick Start
 
 ```bash
-npx claudemd-lint
+git clone https://github.com/codecoincognition/claudemd-lint.git
+cd claudemd-lint
+npm install
+npm run build
+node dist/bin/cli.js /path/to/your/CLAUDE.md
 ```
 
-Or install globally:
+Or install locally and link for global usage:
 
 ```bash
-npm install -g claudemd-lint
+npm link
 claudemd-lint ./CLAUDE.md
 ```
+
+> **npm package coming soon** — `npx claudemd-lint` will work once published to npm.
 
 ## What It Does
 
