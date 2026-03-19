@@ -111,13 +111,33 @@ Classifies rules as directives vs. guidelines. Flags vague rules ("handle errors
 
 Checks for recommended sections (project structure, build commands, testing, coding conventions, error handling, naming, deployment). Flags missing timestamps, heading hierarchy issues, and poor organization.
 
+## Try It on a Broken File
+
+Want to see what the linter catches? Run it against the intentionally broken fixture:
+
+```bash
+node dist/bin/cli.js fixtures/broken.md
+```
+
+This file is packed with common CLAUDE.md mistakes:
+- "Always use semicolons" vs "Never use semicolons"
+- "Mock the database" vs "Never mock the database"
+- "Lodash is banned" vs "Import from lodash/fp"
+- "Do not upgrade express" vs "Use the latest version of all dependencies"
+- "Push to main triggers auto-deploy" vs "Never push directly to main"
+- 11 references to files that don't exist
+- Generic filler rules like "Use common sense" and "Stay hydrated"
+
+Compare it against your own file to see where you stand.
+
 ## Fixtures
 
-The `fixtures/` directory contains example CLAUDE.md files for learning:
+The `fixtures/` directory contains example CLAUDE.md files for testing:
 
 - `good.md` — Well-structured, specific, maintainable (scores 8+/10)
 - `bad.md` — Common problems: contradictions, staleness, vague rules (scores 4-6/10)
 - `ugly.md` — Everything wrong: bloat, all-caps, no structure, duplicates (scores 2-4/10)
+- `broken.md` — Deliberately contradictory, stale refs, boilerplate (scores ~6/10)
 
 ## Programmatic API
 
