@@ -78,6 +78,8 @@ claudemd-lint path/to/CLAUDE.md    # Lint a specific file
 claudemd-lint --discover           # Find and lint all CLAUDE.md files in monorepo
 claudemd-lint --json               # Output as JSON (for CI/CD pipelines)
 claudemd-lint --ci                 # Output GitHub Actions annotations
+claudemd-lint --fix                # Auto-fix common issues and re-lint
+claudemd-lint --fix --dry-run      # Preview fixes without writing
 claudemd-lint --help               # Show help
 ```
 
@@ -111,6 +113,25 @@ Classifies rules as directives vs. guidelines. Flags vague rules ("handle errors
 
 Checks for recommended sections (project structure, build commands, testing, coding conventions, error handling, naming, deployment). Flags missing timestamps, heading hierarchy issues, and poor organization.
 
+## Auto-Fix Mode
+
+`--fix` automatically repairs common issues and re-lints to show the improvement:
+
+```bash
+claudemd-lint --fix                # Fix and write back
+claudemd-lint --fix --dry-run      # Preview what would change
+```
+
+What it fixes:
+- **Boilerplate removal** — deletes generic rules Claude already follows ("write clean code", "follow best practices")
+- **Duplicate removal** — removes exact duplicate lines (keeps first occurrence)
+- **Filler trimming** — rewrites verbose phrases ("it is important to" → removed, "in order to" → "to")
+- **Whitespace cleanup** — collapses 3+ blank lines to 2
+- **Timestamp insertion** — adds `Last updated: YYYY-MM-DD` if missing
+- **Vague rule markers** — appends `<!-- TODO: make this more specific -->` to vague rules for manual review
+
+Fixes are conservative — they preserve file structure, headings, and section order.
+
 ## Try It on a Broken File
 
 Want to see what the linter catches? Run it against the intentionally broken fixture:
@@ -142,7 +163,7 @@ The `fixtures/` directory contains example CLAUDE.md files for testing:
 ## Programmatic API
 
 ```typescript
-import { lint, formatTerminal, DEFAULT_CONFIG } from "claudemd-lint";
+import { lint, fix, formatTerminal, DEFAULT_CONFIG } from "claudemd-lint";
 
 const report = lint("./CLAUDE.md", {
   ...DEFAULT_CONFIG,
@@ -151,13 +172,17 @@ const report = lint("./CLAUDE.md", {
 
 console.log(formatTerminal(report));
 console.log(`Score: ${report.overallScore}/10`);
+
+// Auto-fix common issues
+const result = fix(fileContent, report.findings);
+console.log(result.summary); // "Removed 3 boilerplate line(s), ..."
 ```
 
 ## Roadmap
 
 - [ ] GitHub Action for PR checks on CLAUDE.md changes
 - [ ] VS Code extension with inline diagnostics
-- [ ] `--fix` mode that rewrites common issues
+- [x] `--fix` mode that rewrites common issues
 - [ ] `.claudelintrc.json` config file for custom rules and weights
 - [ ] Monorepo hierarchy visualization
 
