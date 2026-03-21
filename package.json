@@ -37,7 +37,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "claudemd-lint",
-    "test": "node --test dist/**/*.test.js",
+    "test": "node --test dist/src/*.test.js dist/src/rules/*.test.js",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
