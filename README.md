@@ -35,35 +35,24 @@
 
 ## Install
 
-<table>
-<tr>
-<td width="50%">
-
-**Claude Code plugin** (recommended)
+**As a Claude Code plugin** (recommended):
 
 ```bash
 claude mcp add claudemd-lint -- npx @vikassah/claudemd-lint --mcp
 ```
 
-</td>
-<td width="50%">
-
-**Standalone CLI**
+**As a standalone CLI:**
 
 ```bash
 npx @vikassah/claudemd-lint ./CLAUDE.md
 ```
 
-Or install globally:
+**Or install globally:**
 
 ```bash
 npm install -g @vikassah/claudemd-lint
 claudemd-lint ./CLAUDE.md
 ```
-
-</td>
-</tr>
-</table>
 
 <br>
 
