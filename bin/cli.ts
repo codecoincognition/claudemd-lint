@@ -39,6 +39,8 @@ function parseArgs(argv: string[]): {
   dryRun: boolean;
   mcp: boolean;
   init: boolean;
+  badge: boolean;
+  scoreOnly: boolean;
 } {
   const paths: string[] = [];
   let format: "terminal" | "json" | "ci" = "terminal";
@@ -48,6 +50,8 @@ function parseArgs(argv: string[]): {
   let dryRun = false;
   let mcp = false;
   let init = false;
+  let badge = false;
+  let scoreOnly = false;
 
   for (const arg of argv.slice(2)) {
     if (arg === "--json") format = "json";
@@ -58,10 +62,12 @@ function parseArgs(argv: string[]): {
     else if (arg === "--dry-run") dryRun = true;
     else if (arg === "--mcp") mcp = true;
     else if (arg === "--init") init = true;
+    else if (arg === "--badge") badge = true;
+    else if (arg === "--score-only") scoreOnly = true;
     else if (!arg.startsWith("-")) paths.push(arg);
   }
 
-  return { paths, format, discover, help, fixMode, dryRun, mcp, init };
+  return { paths, format, discover, help, fixMode, dryRun, mcp, init, badge, scoreOnly };
 }
 
 function printHelp(): void {
@@ -78,6 +84,8 @@ ${BOLD}OPTIONS${RESET}
   --init        Generate a CLAUDE.md from your codebase (scans configs, structure, CI)
   --fix         Auto-fix common issues and write the file back
   --dry-run     Show what --fix/--init would change without writing
+  --badge       Output a Shields.io badge URL for your README
+  --score-only  Output just the numeric score (for scripting)
   --mcp         Start as MCP server (for Claude Code integration)
   -h, --help    Show this help
 
@@ -275,6 +283,24 @@ async function main(): Promise<void> {
 
       // ── Normal lint mode ──────────────────────────────────────
       const report = lint(filePath, config);
+
+      // Badge mode: output Shields.io URL and exit
+      if (args.badge) {
+        const color = report.overallScore >= 8 ? "brightgreen" : report.overallScore >= 6 ? "yellow" : "red";
+        const score = encodeURIComponent(`${report.overallScore}/10`);
+        const url = `https://img.shields.io/badge/CLAUDE.md-${score}-${color}`;
+        console.log(url);
+        console.log("");
+        console.log(`${DIM}Markdown:${RESET} ![CLAUDE.md Score](${url})`);
+        continue;
+      }
+
+      // Score-only mode: just the number
+      if (args.scoreOnly) {
+        console.log(report.overallScore);
+        if (report.verdict === "poor") hasErrors = true;
+        continue;
+      }
 
       switch (args.format) {
         case "json":
