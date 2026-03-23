@@ -23,6 +23,21 @@ claudemd-lint ./CLAUDE.md
 
 > **npm package coming soon** — `npx claudemd-lint` will work once published to npm.
 
+## Claude Code Integration (MCP)
+
+Install as a Claude Code plugin with one command:
+
+```bash
+claude mcp add claudemd-lint -- npx claudemd-lint --mcp
+```
+
+This exposes two tools to Claude:
+
+- **`lint_claudemd`** — Lint a CLAUDE.md file and return scores across 7 dimensions
+- **`discover_claudemd`** — Find all CLAUDE.md files in a project hierarchy
+
+Once installed, Claude can automatically lint your CLAUDE.md files during sessions.
+
 ## What It Does
 
 claudemd-lint reads your CLAUDE.md (and child files in monorepos) and produces a scored report across 7 dimensions:
