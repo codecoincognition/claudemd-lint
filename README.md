@@ -9,19 +9,19 @@ Every Claude Code user writes a CLAUDE.md. Nobody validates theirs. This tool ch
 **As a Claude Code plugin (recommended):**
 
 ```bash
-claude mcp add claudemd-lint -- npx claudemd-lint --mcp
+claude mcp add claudemd-lint -- npx @vikassah/claudemd-lint --mcp
 ```
 
 **As a standalone CLI:**
 
 ```bash
-npx claudemd-lint ./CLAUDE.md
+npx @vikassah/claudemd-lint ./CLAUDE.md
 ```
 
 Or install globally:
 
 ```bash
-npm install -g claudemd-lint
+npm install -g @vikassah/claudemd-lint
 claudemd-lint ./CLAUDE.md
 ```
 
