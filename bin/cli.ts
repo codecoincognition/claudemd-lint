@@ -19,6 +19,7 @@ import { lint } from "../src/scorer.js";
 import { discoverFiles } from "../src/parser.js";
 import { formatTerminal, formatJson, formatCi } from "../src/reporter.js";
 import { fix } from "../src/fixer.js";
+import { generate } from "../src/generator.js";
 import { DEFAULT_CONFIG } from "../src/types.js";
 import type { LintConfig } from "../src/types.js";
 
@@ -37,6 +38,7 @@ function parseArgs(argv: string[]): {
   fixMode: boolean;
   dryRun: boolean;
   mcp: boolean;
+  init: boolean;
 } {
   const paths: string[] = [];
   let format: "terminal" | "json" | "ci" = "terminal";
@@ -45,6 +47,7 @@ function parseArgs(argv: string[]): {
   let fixMode = false;
   let dryRun = false;
   let mcp = false;
+  let init = false;
 
   for (const arg of argv.slice(2)) {
     if (arg === "--json") format = "json";
@@ -54,10 +57,11 @@ function parseArgs(argv: string[]): {
     else if (arg === "--fix") fixMode = true;
     else if (arg === "--dry-run") dryRun = true;
     else if (arg === "--mcp") mcp = true;
+    else if (arg === "--init") init = true;
     else if (!arg.startsWith("-")) paths.push(arg);
   }
 
-  return { paths, format, discover, help, fixMode, dryRun, mcp };
+  return { paths, format, discover, help, fixMode, dryRun, mcp, init };
 }
 
 function printHelp(): void {
@@ -71,8 +75,9 @@ ${BOLD}OPTIONS${RESET}
   --json        Output as JSON
   --ci          Output GitHub Actions annotations
   --discover    Find and lint all CLAUDE.md files in monorepo
+  --init        Generate a CLAUDE.md from your codebase (scans configs, structure, CI)
   --fix         Auto-fix common issues and write the file back
-  --dry-run     Show what --fix would change without writing (use with --fix)
+  --dry-run     Show what --fix/--init would change without writing
   --mcp         Start as MCP server (for Claude Code integration)
   -h, --help    Show this help
 
@@ -82,6 +87,8 @@ ${BOLD}EXAMPLES${RESET}
   claudemd-lint --discover               Find and lint all CLAUDE.md files
   claudemd-lint --json > report.json     Export as JSON
   claudemd-lint --ci                     GitHub Actions mode
+  claudemd-lint --init                   Generate CLAUDE.md from project
+  claudemd-lint --init --dry-run         Preview generated CLAUDE.md
   claudemd-lint --fix                    Auto-fix and re-lint
   claudemd-lint --fix --dry-run          Preview fixes without writing
   claude mcp add claudemd-lint -- npx claudemd-lint --mcp
@@ -105,6 +112,54 @@ async function main(): Promise<void> {
   }
 
   const cwd = process.cwd();
+
+  // ── Init mode ─────────────────────────────────────────────────
+  if (args.init) {
+    const outPath = resolve(cwd, "CLAUDE.md");
+
+    if (existsSync(outPath) && !args.dryRun) {
+      console.error(
+        `${YELLOW}CLAUDE.md already exists.${RESET} Use --dry-run to preview, or delete the existing file first.`
+      );
+      process.exit(1);
+    }
+
+    const result = generate(cwd);
+
+    console.log("");
+    console.log(`${BOLD}🔍 Project Scan${RESET}`);
+    console.log("─".repeat(56));
+    for (const d of result.detections) {
+      console.log(`  ${GREEN}✓${RESET} ${d.category}: ${d.detail}`);
+    }
+    console.log("");
+    console.log(`  ${BOLD}${result.summary}${RESET}`);
+    console.log("");
+
+    if (args.dryRun) {
+      console.log(`${BOLD}Generated CLAUDE.md (preview):${RESET}`);
+      console.log("─".repeat(56));
+      console.log(result.content);
+      console.log("─".repeat(56));
+      console.log(`${DIM}No files were written (--dry-run).${RESET}`);
+      console.log("");
+    } else {
+      writeFileSync(outPath, result.content, "utf-8");
+      console.log(`${GREEN}Wrote ${outPath}${RESET}`);
+      console.log("");
+
+      // Lint the generated file and show score
+      const config: LintConfig = {
+        ...DEFAULT_CONFIG,
+        rootDir: cwd,
+        format: "terminal",
+      };
+      const report = lint(outPath, config);
+      console.log(formatTerminal(report));
+    }
+
+    process.exit(0);
+  }
 
   // Resolve files to lint
   let filePaths: string[] = [];
