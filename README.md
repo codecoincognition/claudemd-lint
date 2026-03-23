@@ -54,6 +54,13 @@ claude mcp add claudemd-lint -- npx @vikassah/claudemd-lint --mcp
 npx @vikassah/claudemd-lint ./CLAUDE.md
 ```
 
+Or install globally:
+
+```bash
+npm install -g @vikassah/claudemd-lint
+claudemd-lint ./CLAUDE.md
+```
+
 </td>
 </tr>
 </table>
