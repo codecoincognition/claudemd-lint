@@ -31,12 +31,13 @@ Install as a Claude Code plugin with one command:
 claude mcp add claudemd-lint -- npx claudemd-lint --mcp
 ```
 
-This exposes two tools to Claude:
+This exposes three tools to Claude:
 
 - **`lint_claudemd`** — Lint a CLAUDE.md file and return scores across 7 dimensions
 - **`discover_claudemd`** — Find all CLAUDE.md files in a project hierarchy
+- **`init_claudemd`** — Generate a CLAUDE.md by scanning your project's configs and structure
 
-Once installed, Claude can automatically lint your CLAUDE.md files during sessions.
+Once installed, Claude can automatically lint, generate, and improve your CLAUDE.md files during sessions.
 
 ## What It Does
 
@@ -93,6 +94,8 @@ claudemd-lint path/to/CLAUDE.md    # Lint a specific file
 claudemd-lint --discover           # Find and lint all CLAUDE.md files in monorepo
 claudemd-lint --json               # Output as JSON (for CI/CD pipelines)
 claudemd-lint --ci                 # Output GitHub Actions annotations
+claudemd-lint --init               # Generate CLAUDE.md from your project
+claudemd-lint --init --dry-run     # Preview generated CLAUDE.md
 claudemd-lint --fix                # Auto-fix common issues and re-lint
 claudemd-lint --fix --dry-run      # Preview fixes without writing
 claudemd-lint --help               # Show help
@@ -147,6 +150,27 @@ What it fixes:
 
 Fixes are conservative — they preserve file structure, headings, and section order.
 
+## Generate from Scratch
+
+Don't have a CLAUDE.md yet? `--init` scans your project and generates one:
+
+```bash
+claudemd-lint --init               # Generate and write CLAUDE.md
+claudemd-lint --init --dry-run     # Preview without writing
+```
+
+What it detects:
+- **Languages** — TypeScript, Python, Go, Rust, Java, Ruby, Elixir, Swift
+- **Frameworks** — Next.js, React, Vue, Angular, Express, FastAPI, Django, Gin, Axum, and more
+- **Package manager** — npm, pnpm, yarn, bun, Poetry, PDM (from lock files)
+- **Build/test/lint commands** — from package.json scripts, go.mod, Cargo.toml
+- **Coding conventions** — from .prettierrc, .editorconfig, tsconfig.json
+- **CI/CD** — GitHub Actions, GitLab CI, CircleCI, Jenkins
+- **Deployment** — Vercel, Netlify, Fly.io, Railway, Docker
+- **Database** — PostgreSQL, MySQL, SQLite, MongoDB, Redis (via Prisma or driver packages)
+
+Generated files follow [Anthropic's best practices](https://docs.anthropic.com/en/docs/claude-code): under 200 lines, no linter-rule duplication, concrete instructions, and TODO markers for sections that need human input.
+
 ## Try It on a Broken File
 
 Want to see what the linter catches? Run it against the intentionally broken fixture:
@@ -178,15 +202,19 @@ The `fixtures/` directory contains example CLAUDE.md files for testing:
 ## Programmatic API
 
 ```typescript
-import { lint, fix, formatTerminal, DEFAULT_CONFIG } from "claudemd-lint";
+import { lint, fix, generate, formatTerminal, DEFAULT_CONFIG } from "claudemd-lint";
 
+// Generate a CLAUDE.md from your codebase
+const gen = generate(process.cwd());
+console.log(gen.content);    // The generated markdown
+console.log(gen.summary);    // "Detected: TypeScript, Next.js, npm, ..."
+
+// Lint an existing CLAUDE.md
 const report = lint("./CLAUDE.md", {
   ...DEFAULT_CONFIG,
   rootDir: process.cwd(),
 });
-
 console.log(formatTerminal(report));
-console.log(`Score: ${report.overallScore}/10`);
 
 // Auto-fix common issues
 const result = fix(fileContent, report.findings);
