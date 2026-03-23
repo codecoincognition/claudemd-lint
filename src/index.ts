@@ -1,4 +1,5 @@
 export { lint } from "./scorer.js";
+export { startMcpServer } from "./mcp.js";
 export { parseFile, discoverFiles } from "./parser.js";
 export { formatTerminal, formatJson, formatCi } from "./reporter.js";
 export { fix } from "./fixer.js";
