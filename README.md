@@ -6,6 +6,14 @@ Every Claude Code user writes a CLAUDE.md. Nobody validates theirs. This tool ch
 
 ## Install
 
+**As a Claude Code plugin (recommended):**
+
+```bash
+claude mcp add claudemd-lint -- npx claudemd-lint --mcp
+```
+
+**As a standalone CLI:**
+
 ```bash
 git clone https://github.com/codecoincognition/claudemd-lint.git
 cd claudemd-lint
