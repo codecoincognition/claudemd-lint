@@ -36,6 +36,7 @@ function parseArgs(argv: string[]): {
   help: boolean;
   fixMode: boolean;
   dryRun: boolean;
+  mcp: boolean;
 } {
   const paths: string[] = [];
   let format: "terminal" | "json" | "ci" = "terminal";
@@ -43,6 +44,7 @@ function parseArgs(argv: string[]): {
   let help = false;
   let fixMode = false;
   let dryRun = false;
+  let mcp = false;
 
   for (const arg of argv.slice(2)) {
     if (arg === "--json") format = "json";
@@ -51,10 +53,11 @@ function parseArgs(argv: string[]): {
     else if (arg === "--help" || arg === "-h") help = true;
     else if (arg === "--fix") fixMode = true;
     else if (arg === "--dry-run") dryRun = true;
+    else if (arg === "--mcp") mcp = true;
     else if (!arg.startsWith("-")) paths.push(arg);
   }
 
-  return { paths, format, discover, help, fixMode, dryRun };
+  return { paths, format, discover, help, fixMode, dryRun, mcp };
 }
 
 function printHelp(): void {
@@ -70,6 +73,7 @@ ${BOLD}OPTIONS${RESET}
   --discover    Find and lint all CLAUDE.md files in monorepo
   --fix         Auto-fix common issues and write the file back
   --dry-run     Show what --fix would change without writing (use with --fix)
+  --mcp         Start as MCP server (for Claude Code integration)
   -h, --help    Show this help
 
 ${BOLD}EXAMPLES${RESET}
@@ -80,13 +84,20 @@ ${BOLD}EXAMPLES${RESET}
   claudemd-lint --ci                     GitHub Actions mode
   claudemd-lint --fix                    Auto-fix and re-lint
   claudemd-lint --fix --dry-run          Preview fixes without writing
+  claude mcp add claudemd-lint -- npx claudemd-lint --mcp
 
 ${DIM}7 Dimensions: Consistency · Staleness · Redundancy · Scope · Tokens · Actionability · Maintainability${RESET}
 `);
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const args = parseArgs(process.argv);
+
+  if (args.mcp) {
+    const { startMcpServer } = await import("../src/mcp.js");
+    await startMcpServer();
+    return;
+  }
 
   if (args.help) {
     printHelp();
@@ -233,4 +244,7 @@ function main(): void {
   process.exit(hasErrors ? 1 : 0);
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
