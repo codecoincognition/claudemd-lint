@@ -15,12 +15,15 @@ claude mcp add claudemd-lint -- npx claudemd-lint --mcp
 **As a standalone CLI:**
 
 ```bash
-git clone https://github.com/codecoincognition/claudemd-lint.git
-cd claudemd-lint
-npm install && npm run build
+npx claudemd-lint ./CLAUDE.md
 ```
 
-> **npm package coming soon** — `npx claudemd-lint` will work once published.
+Or install globally:
+
+```bash
+npm install -g claudemd-lint
+claudemd-lint ./CLAUDE.md
+```
 
 ## What Can It Do?
 
