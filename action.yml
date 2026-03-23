@@ -1,0 +1,73 @@
+name: "claudemd-lint"
+description: "Lint, validate, and score your CLAUDE.md files across 7 dimensions"
+author: "Code Coin Cognition LLC"
+
+branding:
+  icon: "check-circle"
+  color: "blue"
+
+inputs:
+  path:
+    description: "Path to CLAUDE.md file (default: auto-discover)"
+    required: false
+    default: ""
+  threshold:
+    description: "Minimum score to pass (1-10, default: 4)"
+    required: false
+    default: "4"
+
+outputs:
+  score:
+    description: "Overall score (1-10)"
+    value: ${{ steps.lint.outputs.score }}
+  verdict:
+    description: "Verdict (excellent, good, needs-work, poor)"
+    value: ${{ steps.lint.outputs.verdict }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Install claudemd-lint
+      shell: bash
+      run: npm install -g claudemd-lint@latest || npm install -g ${{ github.action_path }}
+
+    - name: Run lint
+      id: lint
+      shell: bash
+      run: |
+        # Determine path
+        TARGET="${{ inputs.path }}"
+        if [ -z "$TARGET" ]; then
+          if [ -f "CLAUDE.md" ]; then
+            TARGET="CLAUDE.md"
+          else
+            echo "::error::No CLAUDE.md found. Specify a path or create one with: npx claudemd-lint --init"
+            exit 1
+          fi
+        fi
+
+        # Get score
+        SCORE=$(npx claudemd-lint --score-only "$TARGET")
+        echo "score=$SCORE" >> "$GITHUB_OUTPUT"
+
+        # Get verdict from JSON
+        VERDICT=$(npx claudemd-lint --json "$TARGET" | node -e "process.stdin.on('data',d=>{try{console.log(JSON.parse(d).verdict)}catch{console.log('unknown')}})")
+        echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+
+        # Run CI mode for annotations
+        npx claudemd-lint --ci "$TARGET"
+
+        # Threshold check
+        THRESHOLD="${{ inputs.threshold }}"
+        PASS=$(node -e "console.log($SCORE >= $THRESHOLD ? 'true' : 'false')")
+        if [ "$PASS" = "false" ]; then
+          echo "::error::CLAUDE.md score ($SCORE/10) is below threshold ($THRESHOLD/10)"
+          exit 1
+        fi
+
+        echo "CLAUDE.md score: $SCORE/10 ($VERDICT)"
