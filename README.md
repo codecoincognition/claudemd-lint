@@ -171,6 +171,45 @@ What it detects:
 
 Generated files follow [Anthropic's best practices](https://docs.anthropic.com/en/docs/claude-code): under 200 lines, no linter-rule duplication, concrete instructions, and TODO markers for sections that need human input.
 
+## Score Badge
+
+Add a CLAUDE.md quality badge to your README:
+
+```bash
+claudemd-lint --badge              # Get Shields.io badge URL
+claudemd-lint --score-only         # Just the number (for scripting)
+```
+
+Output:
+```
+![CLAUDE.md Score](https://img.shields.io/badge/CLAUDE.md-8.2%2F10-brightgreen)
+```
+
+Colors: green (8+), yellow (6-7.9), red (<6).
+
+## GitHub Action
+
+Add quality gates to PRs that touch your CLAUDE.md:
+
+```yaml
+# .github/workflows/claudemd-lint.yml
+name: CLAUDE.md Quality
+on:
+  pull_request:
+    paths: ["CLAUDE.md", ".claude/**"]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: codecoincognition/claudemd-lint@main
+        with:
+          threshold: "6"  # Fail if score drops below 6/10
+```
+
+The action posts GitHub annotations on warnings/errors and fails the check if the score is below your threshold.
+
 ## Try It on a Broken File
 
 Want to see what the linter catches? Run it against the intentionally broken fixture:
@@ -223,9 +262,12 @@ console.log(result.summary); // "Removed 3 boilerplate line(s), ..."
 
 ## Roadmap
 
-- [ ] GitHub Action for PR checks on CLAUDE.md changes
-- [ ] VS Code extension with inline diagnostics
 - [x] `--fix` mode that rewrites common issues
+- [x] `--init` mode that generates CLAUDE.md from codebase scanning
+- [x] GitHub Action for PR quality gates
+- [x] Score badge for READMEs (`--badge`)
+- [x] MCP server for Claude Code integration (`--mcp`)
+- [ ] VS Code extension with inline diagnostics
 - [ ] `.claudelintrc.json` config file for custom rules and weights
 - [ ] Monorepo hierarchy visualization
 
