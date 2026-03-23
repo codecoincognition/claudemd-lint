@@ -11,6 +11,7 @@ import { resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { lint } from "./scorer.js";
 import { discoverFiles } from "./parser.js";
+import { generate } from "./generator.js";
 import { DEFAULT_CONFIG } from "./types.js";
 import type { LintConfig, Finding } from "./types.js";
 
@@ -150,6 +151,54 @@ export async function startMcpServer(): Promise<void> {
             {
               type: "text" as const,
               text: JSON.stringify(files, null, 2),
+            },
+          ],
+        };
+      } catch (err: unknown) {
+        const error = err as Error;
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Error: ${error.message}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  server.tool(
+    "init_claudemd",
+    "Generate a CLAUDE.md file by scanning the project's configs, directory structure, CI, and dependencies. Returns the generated content without writing to disk.",
+    {
+      rootDir: z
+        .string()
+        .optional()
+        .describe(
+          "Root directory of the project to scan. Defaults to current working directory."
+        ),
+    },
+    async ({ rootDir }) => {
+      try {
+        const dir = rootDir ? resolve(rootDir) : process.cwd();
+        const result = generate(dir);
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  generatedContent: result.content,
+                  detections: result.detections,
+                  summary: result.summary,
+                  lineCount: result.content.split("\n").length,
+                },
+                null,
+                2
+              ),
             },
           ],
         };
