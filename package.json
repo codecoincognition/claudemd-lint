@@ -1,6 +1,6 @@
 {
   "name": "@vikassah/claudemd-lint",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Lint, validate, and score your CLAUDE.md files across 7 dimensions",
   "author": "Code Coin Cognition LLC <hello@codecoincognition.com>",
   "license": "MIT",

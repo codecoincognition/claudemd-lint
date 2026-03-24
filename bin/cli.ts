@@ -123,16 +123,17 @@ async function main(): Promise<void> {
 
   // ── Init mode ─────────────────────────────────────────────────
   if (args.init) {
-    const outPath = resolve(cwd, "CLAUDE.md");
+    const targetDir = args.paths.length > 0 ? resolve(args.paths[0]) : cwd;
+    const outPath = resolve(targetDir, "CLAUDE.md");
 
     if (existsSync(outPath) && !args.dryRun) {
       console.error(
-        `${YELLOW}CLAUDE.md already exists.${RESET} Use --dry-run to preview, or delete the existing file first.`
+        `${YELLOW}CLAUDE.md already exists at ${outPath}.${RESET} Use --dry-run to preview, or delete the existing file first.`
       );
       process.exit(1);
     }
 
-    const result = generate(cwd);
+    const result = generate(targetDir);
 
     console.log("");
     console.log(`${BOLD}🔍 Project Scan${RESET}`);
@@ -159,7 +160,7 @@ async function main(): Promise<void> {
       // Lint the generated file and show score
       const config: LintConfig = {
         ...DEFAULT_CONFIG,
-        rootDir: cwd,
+        rootDir: targetDir,
         format: "terminal",
       };
       const report = lint(outPath, config);

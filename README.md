@@ -66,7 +66,7 @@ claudemd-lint ./CLAUDE.md
 </tr>
 <tr>
 <td><strong>02</strong></td>
-<td><strong>Generate</strong> — Scan your project and create a CLAUDE.md from scratch</td>
+<td><strong>Generate</strong> — Deep-scan your project and create a production-ready CLAUDE.md (architecture, API endpoints, env vars, gotchas — zero empty TODOs)</td>
 <td><code>claudemd-lint --init</code></td>
 </tr>
 <tr>
@@ -175,7 +175,8 @@ claudemd-lint ./CLAUDE.md
 No CLAUDE.md yet? `--init` scans your project and writes one:
 
 ```bash
-claudemd-lint --init                # Scans project → writes CLAUDE.md
+claudemd-lint --init                # Scans cwd → writes CLAUDE.md
+claudemd-lint --init ./my-project   # Scan a specific directory
 claudemd-lint --init --dry-run      # Preview first
 ```
 
@@ -187,14 +188,96 @@ claudemd-lint --init --dry-run      # Preview first
 <tr><td>Languages</td><td>TypeScript, Python, Go, Rust, Java, Ruby, Elixir, Swift</td></tr>
 <tr><td>Frameworks</td><td>Next.js, React, Vue, Angular, Express, FastAPI, Django, Gin, Axum, +more</td></tr>
 <tr><td>Package manager</td><td>npm, pnpm, yarn, bun, Poetry, PDM (from lock files)</td></tr>
-<tr><td>Commands</td><td>Build/test/lint from package.json, go.mod, Cargo.toml</td></tr>
-<tr><td>Conventions</td><td>.prettierrc, .editorconfig, tsconfig.json</td></tr>
+<tr><td>Commands</td><td>All scripts from package.json, go.mod, Cargo.toml — grouped by purpose</td></tr>
+<tr><td>Architecture</td><td>70+ dependency patterns → auto-filled architecture section (AI libs, state mgmt, routing, auth, ORM, component libs, real-time, queues, payments, etc.)</td></tr>
+<tr><td>API endpoints</td><td>Express/Fastify/Hono route scanning → method, path, description</td></tr>
+<tr><td>Environment vars</td><td>3-layer scan: .env.example → <code>process.env</code> grep → framework configs</td></tr>
+<tr><td>Path aliases</td><td>tsconfig.json <code>compilerOptions.paths</code> → import alias table</td></tr>
+<tr><td>Conventions</td><td>.prettierrc, .editorconfig, tsconfig.json, components.json (shadcn/ui)</td></tr>
+<tr><td>Testing</td><td>Framework, environment (jsdom/happy-dom), setup files, test libraries, mocking patterns</td></tr>
+<tr><td>Database</td><td>Drizzle/Prisma schema parsing → tables with columns. PostgreSQL, MySQL, SQLite, MongoDB, Redis</td></tr>
+<tr><td>Common gotchas</td><td>Auto-detected: in-memory storage, missing rate limiting, HTTPS requirements, env setup, ORM fallbacks</td></tr>
 <tr><td>CI/CD</td><td>GitHub Actions, GitLab CI, CircleCI, Jenkins</td></tr>
-<tr><td>Deploy</td><td>Vercel, Netlify, Fly.io, Railway, Docker</td></tr>
-<tr><td>Database</td><td>PostgreSQL, MySQL, SQLite, MongoDB, Redis</td></tr>
+<tr><td>Deploy</td><td>Replit, Vercel, Netlify, Fly.io, Railway, Docker — with port/config extraction</td></tr>
+<tr><td>Project name</td><td>README.md H1 → directory name → package.json (avoids scaffold names like "my-app")</td></tr>
+<tr><td>Description</td><td>First paragraph from README.md</td></tr>
+<tr><td>Project structure</td><td>2-level deep directory mapping with auto-labeled purposes</td></tr>
 </table>
 
-Output follows [Anthropic's best practices](https://docs.anthropic.com/en/docs/claude-code) — under 200 lines, no linter-rule duplication, TODO markers for sections that need your input.
+Output follows [Anthropic's best practices](https://docs.anthropic.com/en/docs/claude-code) — under 200 lines, no linter-rule duplication, zero empty TODO placeholders.
+
+<details>
+<summary><strong>Example: Generated CLAUDE.md for a full-stack React + Express + AI project</strong></summary>
+
+<br>
+
+```markdown
+# Menu Visualizer
+
+Transform text-based food menus into stunning visual displays with AI-generated images.
+
+TypeScript, React, Express, Tailwind CSS, Drizzle ORM project.
+
+## Build and Dev Commands
+
+- `npm run dev` — Start development server
+- `npm run build` — Production build
+- `npm run start` — Start production server
+- `npm run check` — Type-check
+- `npm run db:push` — Push database schema changes
+
+## Project Structure
+
+- `client/` — Client-side code
+- `client/src/components/` — UI components
+- `client/src/hooks/` — Custom React hooks
+- `client/src/pages/` — Page routes
+- `server/` — Server-side code
+- `shared/` — Shared types and schemas
+
+## Architecture
+
+- Google Gemini AI for text/image generation
+- React Query for server state management
+- Wouter for lightweight client routing
+- Multer for multipart file upload handling
+- Zod for runtime schema validation
+- Drizzle ORM for type-safe database access
+- shadcn/ui component library (Radix UI primitives)
+
+## API Endpoints
+
+- `POST /api/process-menu` — Process menu (text or image)
+- `GET /api/menu-items` — Get menu items
+- `GET /api/menu-items/:id` — Get specific menu item
+- `POST /api/process-menu-stream` — Streaming endpoint (SSE)
+
+## Environment Variables
+
+| Variable | Required | Source |
+|----------|----------|--------|
+| `GEMINI_API_KEY` | Yes | .env.example |
+| `DATABASE_URL` | No | drizzle.config.ts |
+| `PORT` | No | .env.example |
+
+## Common Gotchas
+
+- Data is stored in memory — lost on server restart
+- Copy `.env.example` to `.env` and fill in API keys before running
+- No rate limiting on API endpoints — add before production
+- Web Speech API requires HTTPS in production
+
+## Database
+
+- PostgreSQL (via Drizzle ORM)
+- Schema: `./shared/schema.ts`
+- Tables: `menu_items` (id, sessionId, name, description, imageUrl, createdAt),
+  `menu_sessions` (id, originalText, createdAt)
+```
+
+Score: **10/10** across all 7 dimensions.
+
+</details>
 
 <br>
 
@@ -258,7 +341,8 @@ Green (8+) &middot; Yellow (6-7.9) &middot; Red (<6)
 ```bash
 claudemd-lint                      # Lint ./CLAUDE.md
 claudemd-lint path/to/CLAUDE.md    # Lint a specific file
-claudemd-lint --init               # Generate CLAUDE.md from project scan
+claudemd-lint --init               # Generate CLAUDE.md from cwd
+claudemd-lint --init ./my-project  # Generate CLAUDE.md for a target directory
 claudemd-lint --init --dry-run     # Preview generated file
 claudemd-lint --fix                # Auto-fix common issues
 claudemd-lint --fix --dry-run      # Preview fixes
@@ -330,6 +414,7 @@ claudemd-lint fixtures/broken.md   # See what it catches
 - [x] MCP server for Claude Code
 - [x] GitHub Action for CI
 - [x] Score badge for READMEs
+- [x] **v2 generator** — architecture from deps (70+ patterns), API endpoint extraction, env var scanning, database schema parsing, auto-detected gotchas, path aliases, test infrastructure, 2-level directory mapping, smart project naming
 - [ ] VS Code extension with inline diagnostics
 - [ ] `.claudelintrc.json` custom rules and weights
 - [ ] Monorepo hierarchy visualization

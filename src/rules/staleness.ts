@@ -88,7 +88,7 @@ export function checkStaleness(file: ParsedFile, rootDir: string): DimensionScor
       // Look for tool references in CLAUDE.md that aren't in package.json
       const toolPatterns: Array<[RegExp, string]> = [
         [/\bvitest\b/i, "vitest"],
-        [/\bjest\b/i, "jest"],
+        [/\bjest\b(?![-/])/i, "jest"],  // Avoid matching "jest-dom" or "@testing-library/jest-dom"
         [/\bmocha\b/i, "mocha"],
         [/\bcypress\b/i, "cypress"],
         [/\bplaywright\b/i, "playwright"],

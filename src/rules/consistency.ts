@@ -29,9 +29,9 @@ const CONFLICT_PAIRS: Array<[RegExp, RegExp, string]> = [
   [/\bclass\b.*component/i, /\bfunctional\b.*component/i, "React component style"],
   // API style
   [/\bREST\b/i, /\bGraphQL\b/i, "API style"],
-  // Test frameworks
-  [/\bvitest\b/i, /\bjest\b/i, "test framework"],
-  [/\bmocha\b/i, /\bjest\b/i, "test framework"],
+  // Test frameworks (negative lookahead avoids matching "jest-dom" in library names)
+  [/\bvitest\b/i, /\bjest\b(?![-/])/i, "test framework"],
+  [/\bmocha\b/i, /\bjest\b(?![-/])/i, "test framework"],
   [/\bmocha\b/i, /\bvitest\b/i, "test framework"],
   // Test runners
   [/\bnpm\s+test\b/i, /\byarn\s+test\b/i, "test runner"],
