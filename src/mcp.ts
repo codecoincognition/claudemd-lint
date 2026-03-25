@@ -11,7 +11,7 @@ import { resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { lint } from "./scorer.js";
 import { discoverFiles } from "./parser.js";
-import { scanProjectRaw } from "./scanner.js";
+import { scanProjectRaw, type ScanResult } from "./scanner.js";
 import { DEFAULT_CONFIG } from "./types.js";
 import type { LintConfig, Finding } from "./types.js";
 
@@ -30,6 +30,137 @@ function truncateFindings(findings: Finding[]): {
     truncated: [...errors, ...warnings, ...infos],
     totalFindings: findings.length,
   };
+}
+
+/**
+ * Build the full generation prompt for the claudemd-init MCP prompt.
+ * Embeds scan data and a 7-dimension rubric that guides the AI to produce
+ * a high-quality CLAUDE.md.
+ */
+function buildGenerationPrompt(scan: ScanResult): string {
+  const configSummary = Object.entries(scan.configs)
+    .map(([name, content]) => `### ${name}\n\`\`\`\n${content}\n\`\`\``)
+    .join("\n\n");
+
+  return `Generate a CLAUDE.md for this project. CLAUDE.md is the operating context document that Claude Code reads before working in a codebase. Your goal is to produce a file that scores 8+ on all 7 linting dimensions.
+
+## Project Data
+
+**Project root:** \`${scan.projectRoot}\`
+**Existing CLAUDE.md:** ${scan.existingClaudeMd ? "Yes — ask the user whether to overwrite, merge, or cancel before proceeding." : "No — generate fresh."}
+
+### File Tree
+\`\`\`
+${scan.fileTree}
+\`\`\`
+
+### Config Files
+${configSummary || "No config files found. Read the file tree and source files to infer the stack."}
+
+## Your Task
+
+### Phase 1: Read the Codebase
+Using the file tree and configs above as orientation, read the actual source files to understand the project deeply. Prioritize in this order:
+1. **README.md** — project identity, purpose, features
+2. **Entry points** — server/index.ts, app.ts, main.py, src/index.ts, etc.
+3. **Service/business logic** — files in services/, lib/, core/ directories
+4. **Route/controller files** — routes.ts, api/, controllers/
+5. **Schema/model files** — Drizzle tables, Prisma models, Zod schemas, shared/ types
+6. **Config files** — build, deploy, CI configs you need more detail on
+
+**Budget:** Read at most 20 source files. Prioritize files that reveal architecture and patterns over boilerplate.
+
+### Phase 2: Understand and Extract
+As you read, build a mental model of:
+- **Project identity:** What is this? Who is it for? What makes it unique?
+- **Tech stack with purpose:** Not just "Express" but "Express for REST API serving AI analysis results"
+- **Architecture as narrative:** How components connect. Service patterns. Data flows. Describe the DESIGN, not a list of dependencies.
+- **Every script and command:** What it does, when to use it
+- **Env vars:** Which are truly required vs optional vs conditional (e.g., "only if AI_MODEL=openai"). Infer from actual code usage, not just .env.example
+- **API surface:** Endpoints with method, path, what they accept, what they return
+- **Database:** Engine, tables, is it optional? What's the fallback behavior?
+- **Deployment:** Platform, constraints, port configuration, required setup
+- **Real gotchas:** Things that will trip Claude up when working in this codebase. Be specific: "Port 5000 is hardcoded for Replit in routes.ts" not "consider rate limiting"
+
+### Phase 3: Write the CLAUDE.md
+
+Write the file optimized for these 7 scoring dimensions:
+
+**1. Consistency** — No contradictions. If the project uses npm, don't reference yarn. If env vars are optional, don't mark them required.
+
+**2. Staleness** — Only reference files, functions, and patterns that actually exist. Don't mention placeholder/unimplemented features without flagging them.
+
+**3. Redundancy** — Say things once. Don't repeat the description in overview AND architecture. Don't list the same dep in multiple sections.
+
+**4. Scope Specificity** — Every line must be specific to THIS project. "Wrap async in try/catch" is generic. "AI model responses must validate against analysisResultSchema — malformed JSON from Llava will throw" is specific.
+
+**5. Token Efficiency** — Target under 200 lines. Use tables for structured data. No prose walls. Don't explain what Claude already knows.
+
+**6. Actionability** — Every instruction must be mechanically followable. Include actual file paths, function names, and patterns. "Handle errors properly" is vague. "API routes return \\\`{ error: string }\\\` with HTTP 4xx/5xx" is actionable.
+
+**7. Maintainability** — Clear heading hierarchy. Logical section order. Include Last updated: timestamp.
+
+### Anti-Patterns — Do NOT:
+- Dump a flat list of dependencies as "architecture" (the #1 failure mode)
+- Mark all env vars as "Required"
+- Include deps from package.json that aren't actually imported/used in the code
+- Write generic rules ("write clean code", "follow best practices", "use meaningful names")
+- Write for human developers — write for Claude as the primary reader
+- Add empty TODO placeholders
+- Include boilerplate error handling or naming convention sections unless the project has specific, non-obvious conventions
+- Over-explain standard framework behavior
+- Add comments like "// Added by generator" or "// Auto-generated"
+
+### Output Format
+
+Follow this structure (skip sections that don't apply):
+
+\\\`\\\`\\\`markdown
+# {Project Name}
+
+{One-line description}
+
+{Language}, {Framework}, {Key distinguishing lib} project.
+
+## Build and Dev Commands
+{Every useful script — table or bullet list with descriptions}
+
+## Project Structure
+{Directory tree with meaningful, specific descriptions}
+
+## Architecture
+{NARRATIVE — how components connect, key design patterns, data flows}
+{This is the most important section. Describe the design, not the dependencies.}
+
+## API Endpoints
+{Table: method | path | input | output | purpose}
+
+## Environment Variables
+{Table: name | required/optional/conditional | default | what it unlocks}
+{If .env.example exists: "Copy .env.example to .env and configure before running."}
+
+## Database
+{Engine, schema location, tables with columns, optional/required, fallback behavior}
+
+## Common Gotchas
+{Project-specific pitfalls — things that will cause bugs if Claude doesn't know them}
+
+## Deployment
+{Platform, port, build steps, pre-deploy checklist}
+
+## Testing
+{Framework, commands, patterns, setup}
+
+## Coding Conventions
+{ONLY if project-specific and non-obvious}
+
+Last updated: {today's date}
+\\\`\\\`\\\`
+
+### Final Step
+After writing the CLAUDE.md, use the lint_claudemd tool to score it. If any dimension scores below 7, revise and re-lint until all dimensions score 7+.
+
+Now begin: read the source files and generate the CLAUDE.md.`;
 }
 
 export async function startMcpServer(): Promise<void> {
@@ -203,6 +334,34 @@ export async function startMcpServer(): Promise<void> {
           isError: true,
         };
       }
+    }
+  );
+
+  server.prompt(
+    "claudemd-init",
+    "Generate an AI-powered CLAUDE.md by deeply reading the project codebase",
+    {
+      directory: z
+        .string()
+        .optional()
+        .describe("Project root directory. Defaults to current working directory."),
+    },
+    async ({ directory }) => {
+      const dir = directory ? resolve(directory) : process.cwd();
+      const scanData = scanProjectRaw(dir);
+      const prompt = buildGenerationPrompt(scanData);
+
+      return {
+        messages: [
+          {
+            role: "user" as const,
+            content: {
+              type: "text" as const,
+              text: prompt,
+            },
+          },
+        ],
+      };
     }
   );
 
