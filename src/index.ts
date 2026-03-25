@@ -6,6 +6,8 @@ export { fix } from "./fixer.js";
 export type { FixResult, FixAction } from "./fixer.js";
 export { generate } from "./generator.js";
 export type { GeneratorResult, Detection } from "./generator.js";
+export { scanProjectRaw, scanFileTree, collectConfigs, readText } from "./scanner.js";
+export type { ScanResult } from "./scanner.js";
 export type {
   LintReport,
   LintConfig,

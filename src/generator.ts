@@ -8,6 +8,7 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { resolve, basename, join, relative } from "node:path";
+import { readText } from "./scanner.js";
 
 export interface GeneratorResult {
   content: string;
@@ -204,13 +205,6 @@ function readJson(filePath: string): any | null {
   }
 }
 
-function readText(filePath: string): string | null {
-  try {
-    return readFileSync(filePath, "utf-8");
-  } catch {
-    return null;
-  }
-}
 
 function detectPackageManager(rootDir: string): string | null {
   if (existsSync(resolve(rootDir, "bun.lockb")) || existsSync(resolve(rootDir, "bun.lock")))
