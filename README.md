@@ -41,6 +41,8 @@
 claude mcp add claudemd-lint -- npx @vikassah/claudemd-lint --mcp
 ```
 
+> The plugin includes AI-powered CLAUDE.md generation — Claude reads your codebase and writes a fully optimized file. See [AI-First Generation](#ai-first-generation) below.
+
 **As a standalone CLI:**
 
 ```bash
@@ -66,8 +68,8 @@ claudemd-lint ./CLAUDE.md
 </tr>
 <tr>
 <td><strong>02</strong></td>
-<td><strong>Generate</strong> — Deep-scan your project and create a production-ready CLAUDE.md (architecture, API endpoints, env vars, gotchas — zero empty TODOs)</td>
-<td><code>claudemd-lint --init</code></td>
+<td><strong>Generate</strong> — Two modes: <em>AI-first</em> (Claude Code plugin reads your codebase and generates a CLAUDE.md optimized for all 7 dimensions) or <em>deterministic</em> (<code>--init</code> CLI fallback with static scanning)</td>
+<td><code>claudemd-init</code> prompt / <code>claudemd-lint --init</code></td>
 </tr>
 <tr>
 <td><strong>03</strong></td>
@@ -170,7 +172,11 @@ claudemd-lint ./CLAUDE.md
 
 <br>
 
-## Generate from Scratch
+## AI-First Generation
+
+When installed as a Claude Code plugin, the tool exposes a `claudemd-init` prompt that lets Claude read your actual source files — architecture, data flows, patterns, and conventions — and generate a CLAUDE.md optimized against all 7 scoring dimensions. No extra API keys are needed; it uses your existing Claude Code session. For environments outside Claude Code, the deterministic `--init` flag provides a static-scanning fallback with the same project detection capabilities.
+
+## Generate from Scratch (CLI)
 
 No CLAUDE.md yet? `--init` scans your project and writes one:
 
@@ -415,6 +421,7 @@ claudemd-lint fixtures/broken.md   # See what it catches
 - [x] GitHub Action for CI
 - [x] Score badge for READMEs
 - [x] **v2 generator** — architecture from deps (70+ patterns), API endpoint extraction, env var scanning, database schema parsing, auto-detected gotchas, path aliases, test infrastructure, 2-level directory mapping, smart project naming
+- [x] **AI-first generation** — `claudemd-init` MCP prompt lets Claude read your codebase and generate a CLAUDE.md optimized for all 7 dimensions
 - [ ] VS Code extension with inline diagnostics
 - [ ] `.claudelintrc.json` custom rules and weights
 - [ ] Monorepo hierarchy visualization
