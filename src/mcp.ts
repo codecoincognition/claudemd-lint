@@ -307,7 +307,7 @@ export async function startMcpServer(): Promise<void> {
 
   server.tool(
     "init_claudemd",
-    "Scan a project and return raw file tree + config contents for AI-powered CLAUDE.md generation. Returns structured data — use the claudemd-init prompt for full generation instructions.",
+    "Generate a high-quality CLAUDE.md by scanning the project and returning structured data + generation instructions. Call this tool, then follow the instructions in the response to read source files and write the CLAUDE.md.",
     {
       rootDir: z
         .string()
@@ -318,12 +318,13 @@ export async function startMcpServer(): Promise<void> {
       try {
         const dir = rootDir ? resolve(rootDir) : process.cwd();
         const result = scanProjectRaw(dir);
+        const prompt = buildGenerationPrompt(result);
 
         return {
           content: [
             {
               type: "text" as const,
-              text: JSON.stringify(result, null, 2),
+              text: prompt,
             },
           ],
         };
