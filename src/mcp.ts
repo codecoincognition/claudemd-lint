@@ -74,7 +74,7 @@ Using the file tree and configs above as orientation, read the actual source fil
 As you read, build a mental model of:
 - **Project identity:** What is this? Who is it for? What makes it unique?
 - **Tech stack with purpose:** Not just "Express" but "Express for REST API serving AI analysis results"
-- **Architecture as narrative:** How components connect. Service patterns. Data flows. Describe the DESIGN, not a list of dependencies.
+- **Architecture as narrative:** Trace the primary data flow end-to-end (e.g., "user uploads image → Express receives multipart → ai-service.ts selects model based on AI_MODEL env var → model returns JSON → validated against Zod schema → response sent"). Identify design patterns (factory, adapter, fallback chain, pub/sub). Name the orchestrator files. This becomes the Architecture section — it is the MOST IMPORTANT section of the CLAUDE.md.
 - **Every script and command:** What it does, when to use it
 - **Env vars:** Which are truly required vs optional vs conditional (e.g., "only if AI_MODEL=openai"). Infer from actual code usage, not just .env.example
 - **API surface:** Endpoints with method, path, what they accept, what they return
@@ -107,7 +107,8 @@ Write the file optimized for these 7 scoring dimensions:
 - Write generic rules ("write clean code", "follow best practices", "use meaningful names")
 - Write for human developers — write for Claude as the primary reader
 - Add empty TODO placeholders
-- Include boilerplate error handling or naming convention sections unless the project has specific, non-obvious conventions
+- Include boilerplate error handling sections (e.g., "wrap async in try/catch") — Claude already knows this
+- Include boilerplate naming convention sections (e.g., "PascalCase for components") — only include conventions that are surprising or project-specific
 - Over-explain standard framework behavior
 - Add comments like "// Added by generator" or "// Auto-generated"
 
@@ -129,8 +130,11 @@ Follow this structure (skip sections that don't apply):
 {Directory tree with meaningful, specific descriptions}
 
 ## Architecture
-{NARRATIVE — how components connect, key design patterns, data flows}
-{This is the most important section. Describe the design, not the dependencies.}
+{REQUIRED. This is the most important section.}
+{Trace the primary data flow end-to-end. Name the orchestrator files.}
+{Identify design patterns: factory, adapter, fallback chain, middleware pipeline, etc.}
+{Example: "Upload flow: client/UploadSection.tsx → POST /api/analyze → ai-service.ts selects model via AI_MODEL → gemini.ts/llava.ts/openai.ts → response validated against analysisResultSchema → client displays results"}
+{Do NOT just list technologies. Describe HOW they work together.}
 
 ## API Endpoints
 {Table: method | path | input | output | purpose}
@@ -147,6 +151,7 @@ Follow this structure (skip sections that don't apply):
 
 ## Deployment
 {Platform, port, build steps, pre-deploy checklist}
+{Include hardcoded values: ports, hostnames, platform-specific configs like .replit}
 
 ## Testing
 {Framework, commands, patterns, setup}
